@@ -1,0 +1,18 @@
+# Place this file in /etc/mac2xrandr.conf
+# If using LTSP, this must go inside the client chroot: /opt/ltsp/i386/etc/mac2xrandr.conf
+
+#PCs: 01, 02, 04
+mac: 00:19:DB:65:F2:E2 80:1F:02:2F:4E:1F 00:19:DB:66:DF:B6
+run: xrandr --output DVI-I-1 --auto --output VGA-1 --auto --above DVI-I-1
+
+#PC05
+mac: 00:19:DB:66:DF:3F
+run: xrandr --output DVI-I-1 --auto --output HDMI-1 --auto --above DVI-I-1
+
+#PC06
+mac: 80:1F:02:2F:4D:6C
+run: xrandr --output DVI-0 --auto --output VGA-0 --auto --above DVI-0
+
+#PC10 Wide screen
+mac: 00:19:DB:66:E0:1C                  
+run: xrandr --output DVI-I-1 --auto
