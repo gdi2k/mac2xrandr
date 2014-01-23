@@ -4,7 +4,7 @@ mac2xrandr
 Issues a xrandr command based on the network MAC address - good for LTSP environments with numerous monitor configs as the DE will override the LTSP monitor settings.
 
 
-Installation: 
+INSTALLATION:
 
 If using an LTSP environment, all commands should be within the client chroot: /opt/ltsp/i386/ or /opt/ltsp/amd64/
 
@@ -16,11 +16,10 @@ Files should be placed as follows:
  - sample_config -> /etc/mac2xrandr.conf - make any necessary changes as below: 
 
 
-Configuration: 
 
-In /etc/mac2xrandr.conf specify one operator per line. 
+CONFIGURATION: 
 
-Allowable operators: 
+In /etc/mac2xrandr.conf specify one operator per line. Allowable operators: 
 
  - mac
  - run
@@ -29,25 +28,30 @@ Allowable operators:
  - unreq
 
 
-> mac (required)
+mac (required)
+
 Specify the MAC address. You may specify multiple macs by separating with spaces or commas. Example: 
  - mac: 00:19:DB:65:F2:E2 80:1F:02:2F:4E:1F
 
 
-> run (required)
-command to run if MAC address is matched. Example: 
+run (required)
+
+Command to run if MAC address is matched. Example: 
  - run: xrandr --output DVI-I-1 --auto --output VGA-1 --auto --left-of DVI-I-1
 
 
-> var (optional)
+var (optional)
+
 Set variables for repeated use in script. Example: 
  - var: xrandr_bin /usr/bin/xrandr
+
 
 Now you can use it as follows: 
  - run: var[xrandr_bin] --output VGA --off;
 
 
-> req (optional)
+req (optional)
+
 Determine whether to run script or not based on current xrandr state. State is determined by xrandr -q, then transformed into format: output=state:widthxheight@rate; where: 
 
  - output - name of video output
@@ -56,11 +60,14 @@ Determine whether to run script or not based on current xrandr state. State is d
  - height - height of current resolution in pixels
  - rate - refresh rate
 
+
 If we only want to run script if DVI-I-1 is connected: 
  - req: DVI-I-1=connected;
 
 
-> unreq (optional) 
+unreq (optional) 
+
 The opposite of req - we only run if a certain xrandr is NOT true. Example: 
 We DO NOT run the command if HDMI-0 is connected
+
  - unreq: HDMI-0=connected
