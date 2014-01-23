@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=mac2xrandr
+Comment=The utility for change X Window System parameters based on MAC address.
+TryExec=/usr/local/bin/mac2xrandr
+Exec=/usr/local/bin/mac2xrandr
+Icon=mac2xrandr
+
+# This is the launcher - place in /etc/xdg/autostart or similar
