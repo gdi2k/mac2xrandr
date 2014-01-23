@@ -4,16 +4,19 @@ mac2xrandr
 Issues a xrandr command based on the network MAC address - good for LTSP environments with numerous monitor configs as the DE will override the LTSP monitor settings.
 
 
-INSTALLATION:
 
-If using an LTSP environment, all commands should be within the client chroot: /opt/ltsp/i386/ or /opt/ltsp/amd64/
+INSTALLATION:
 
 If using LTSP fat clients, the scripts can be used as is. If using thin clients, mac2xrandr.desktop should be modified to execute "ltsp-localapps /usr/local/bin/mac2xrandr" instead (as the script must run locally). 
 
 Files should be placed as follows: 
  - mac2xrandr -> /usr/local/bin/mac2xrandr - make sure it is executable: chmod +x /usr/local/bin/mac2xrandr
  - mac2xrandr.desktop -> /etc/xdg/autostart/mac2xrandr.desktop
- - sample_config -> /etc/mac2xrandr.conf - make any necessary changes as below: 
+ - sample_config -> /etc/mac2xrandr.conf - make any necessary changes as below. 
+
+
+In an LTSP environment, all files should be placed within the client chroot: /opt/ltsp/i386/ or /opt/ltsp/amd64/ and the image needs to be updated afterwards (including after config file updates) with: ltsp-update-image -a i386
+
 
 
 
