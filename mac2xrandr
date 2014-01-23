@@ -1,0 +1,157 @@
+#!/bin/sh
+#
+# name: mac2xrandr
+# scmu: change xrandr settings based on MAC address.
+# version: 0.1.2
+# date: 12-01-2013
+#
+
+# Environment ##################################################################
+#
+# Main configuretion file.
+MAIN_CONF="${MAIN_CONF:-/etc/mac2xrandr.conf}";
+# Custom configuretion file.
+CUSTOM_CONF="${CUSTOM_CONF:-${HOME}/.config/mac2xrandr.conf}";
+# Allowed custom configure file.
+CUSTOMIZING="yes";
+# X Window Display
+DISPLAY="${DISPLAY:-0.0}";
+# Location of ifconfig binary file
+IFCONFIG="${IFCONFIG:-/sbin/ifconfig}";
+
+
+# Function #####################################################################
+#
+
+run_on_hwaddr() {
+awk -v display="${DISPLAY}" -v ifconfig="${IFCONFIG:-ifconfig}" '
+function get_local_mac(     l) {
+COMMAND = ifconfig;
+while((COMMAND | getline) > 0)
+    if(match($0, /HWaddr[ \t\v]+/)) {
+        l = substr($0, RSTART+RLENGTH);
+        gsub(/[ \t\v]*/, "", l);
+        mac[l] = "";
+        }
+close(COMMAND);
+}
+
+function expvar(        line,ar,tmp) {
+while(match(line, /var\[[^\]]*]/)) {
+    name = substr(line, RSTART+4, RLENGTH-5);
+    erename = "var\\[" name "\\]";
+    if(name in ar)
+        gsub(erename, ar[name], line)
+    else {
+        tmp = tmp substr(line, 1, RSTART+RLENGTH);
+        line = substr(line, RSTART+RLENGTH);
+        }
+    }
+    line = tmp line;
+    return line;
+}
+
+function xrandr_query() {
+XRANDR_QUERY = "xrandr -q -display " display;
+while((XRANDR_QUERY | getline) > 0) {
+    if(match($0, /^.*connected/)) {
+        match($0, /(dis)?connected/);
+        status = substr($0, RSTART, RLENGTH);
+        monitor[++m] = substr($0, 1, RSTART-1);
+        sub(/[ \t\v]+/, "", monitor[m]);
+        if(status != "disconnected")
+            FLAG = monitor[m];
+        else
+            current = current monitor[m] "=" status ";";
+        }
+    else if(FLAG && match($0, /[0-9]+x[0-9]+[ \t\v]+.*[ \t\v]+[0-9]+.[0-9]+\*/)) {
+        resolution[++r] = $1;
+        if(match($0, /[0-9]+(.?[0-9]+)?\*/))
+            freq[++f] = substr($0, RSTART, RLENGTH-1);
+        current = current monitor[m] "=" status ":" resolution[r] "@" freq[f] ";"
+        FLAG = "";
+        }
+    }
+    close(XRANDR_QUERY);
+}
+
+BEGIN {
+get_local_mac();
+xrandr_query();
+}
+
+!/^[ \t\v]*#/ && !/^[ \t\v]*$/ {
+                
+            if(match($0, /^[ \t\v]*[vV][aA][rR][ \t\v]*:[ \t\v]*/)) {
+                name = value = substr($0, RSTART+RLENGTH);
+                sub(/[ \t\v]*[^ \t\v]*[ \t\v]*$/, "", name);
+                sub(/^[ \t\v]*[^ \t\v]*[ \t\v]*/, "", value);
+                var[name] = value;
+                }
+                
+            if(match($0, /^[ \t\v]*[mM][aA][cC][ \t\v]*:[ \t\v]*/)) {
+                FLAG = "";
+                ++mac_num
+                tmp = substr($0, RSTART+RLENGTH);
+                n = split(expvar(tmp,var), tmp_ar, " |,");
+                for(i in tmp_ar)
+                    if(tolower(tmp_ar[i]) in mac) {
+                        mac_link[tmp_ar[i]] = mac_num;
+                        FLAG = mac_num;
+                        }
+                }
+            
+           else if(FLAG) {
+                if(match($0, /^[ \t\v]*[rR][eE][Qq][ \t\v]*:[ \t\v]*/)) {
+                    req[FLAG] = req[FLAG] substr($0, RSTART+RLENGTH) "|";
+                    req[FLAG] = expvar(req[FLAG],var);
+                    }
+                else if(match($0, /^[ \t\v]*[uU][nN][rR][eE][Qq][ \t\v]*:[ \t\v]*/)) {
+                    unreq[FLAG] = unreq[FLAG] substr($0, RSTART+RLENGTH);
+                    unreq[FLAG] = expvar(unreq[FLAG],var);
+                    }
+                else if(match($0, /^[ \t\v]*[rR][uU][nN][ \t\v]*:[ \t\v]*/)) {
+                    run[FLAG] = run[FLAG] " " substr($0, RSTART+RLENGTH);
+                    run[FLAG] = expvar(run[FLAG],var);
+                    if(run[FLAG] !~ /;[ \t\v]*$/)
+                        run[FLAG] = run[FLAG] ";"
+                    }
+                }
+}
+        
+END {
+for(i in mac_link) {
+        if(mac_link[i] in req) {
+            sub(/\/$/, "", req[mac_link[i]]);
+            if(current !~ req[mac_link[i]])
+                REQ = "yes";
+            }
+        if(mac_link[i] in unreq) {
+            sub(/\/$/, "", uneq[mac_link[i]]);
+            if(current ~ unreq[mac_link[i]])
+                UNREQ = "yes";
+            }
+            
+        if(!REQ && !UNREQ) {
+            COMMAND = "export DISPLAY=" display ";" run[mac_link[i]];
+            system(COMMAND);
+            close(COMMAND);
+            REQ = UNREQ = "";
+            }
+            
+        }
+}
+' "${@}";
+}
+
+# Main code ####################################################################
+
+if [ "${CUSTOMIZING}" != "yes" -o ! -e "${CUSTOM_CONF}" ]; then
+    unset CUSTOM_CONF;
+fi
+
+if [ ! -e "${MAIN_CONF}" ]; then
+    unset MAIN_CONF;
+fi
+
+run_on_hwaddr "${MAIN_CONF}" "${CUSTOM_CONF}" "${@}";
