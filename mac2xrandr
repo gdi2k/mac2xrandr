@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # name: mac2xrandr
-# scmu: change xrandr settings based on MAC address.
+# mac2xrandr: change xrandr settings based on MAC address.
 # version: 0.1.2
 # date: 12-01-2013
 #
